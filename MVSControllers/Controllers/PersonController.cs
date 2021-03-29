@@ -44,46 +44,77 @@ namespace MVSControllers.Controllers
 			return View(persons);
 		}
 
-        // GET: PersonController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
 
         // GET: PersonController/Create
-        public ActionResult Create()
+        [HttpGet]
+        public IActionResult Create()
         {
             return View();
         }
 
         // POST: PersonController/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create(PersonsModel model)
         {
+            if (model == null)
+            {
+                return RedirectToAction("Index");
+            }
             try
             {
-                return RedirectToAction(nameof(Index));
+                using (IDbConnection conn = new SqlConnection(_conString))
+                {
+                    await conn.ExecuteAsync("INSERT INTO Person(FirstName,LastName,MiddleName) VALUES(@FirstName,@LastName,@MiddleName) ", model);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                Console.WriteLine(ex.Message);
             }
+            return RedirectToAction("Index");
         }
+		[HttpGet]
+		public async Task<IActionResult> FindById(int id)
+		{
+			if (id <= 0)
+			{
+				return RedirectToAction("Index", "Home");
+			}
+			var lst = new List<PersonsModel>();
+			try
+			{
+				using (IDbConnection conn = new SqlConnection(_conString))
+				{
+					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Persons WHERE Id = {id}")).ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Console.WriteLine(ex.Message);
+			}
+			return View("Index", lst);
+		}
+		[HttpGet]
+		public async Task<IActionResult> FindByFio(string fio)
+		{
+			if (fio == null || fio == "")
+			{
+				return RedirectToAction("Index", "Home");
+			}
+			var lst = new List<PersonsModel>();
+			try
+			{
+				using (IDbConnection conn = new SqlConnection(_conString))
+				{
+					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Persons WHERE (LastName+' '+FirstName+' '+MiddleName) LIKE '%{fio}%' ")).ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Console.WriteLine(ex.Message);
+			}
+			return View("Index", lst);
+		}
 
-        // POST: PersonController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-    }
+	}
 }
