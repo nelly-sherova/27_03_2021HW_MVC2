@@ -16,13 +16,14 @@ namespace MVSControllers.Controllers
     public class PersonController : Controller
     {
         private readonly ILogger<PersonController> _logger;
-        private readonly string _conString = "Data source = NILUFARSHEROVA; Initial catalog = MVCHomeWorkdb; Integrated Security = True";
+        private readonly string _conString = "Data source = (local); Initial catalog = MVCHomeWorkdb; Integrated Security = True";
         private readonly IConfiguration _configuration;
         public PersonController(ILogger<PersonController> logger, IConfiguration configuration)
         {
             _configuration = configuration;
             _logger = logger;
-            _conString = _configuration.GetConnectionString("Default");
+            //_conString = _configuration.GetConnectionString("Default");
+            Console.WriteLine(_conString);
         }
         // GET: PersonController
         [HttpGet]
@@ -85,7 +86,7 @@ namespace MVSControllers.Controllers
 			{
 				using (IDbConnection conn = new SqlConnection(_conString))
 				{
-					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Persons WHERE Id = {id}")).ToList();
+					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Person WHERE Id = {id}")).ToList();
 				}
 			}
 			catch (Exception ex)
@@ -106,7 +107,7 @@ namespace MVSControllers.Controllers
 			{
 				using (IDbConnection conn = new SqlConnection(_conString))
 				{
-					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Persons WHERE (LastName+' '+FirstName+' '+MiddleName) LIKE '%{fio}%' ")).ToList();
+					lst = (await conn.QueryAsync<PersonsModel>($"SELECT * FROM Person WHERE (LastName+' '+FirstName+' '+MiddleName) LIKE '%{fio}%' ")).ToList();
 				}
 			}
 			catch (Exception ex)
